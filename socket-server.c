@@ -9,6 +9,7 @@
     #include <sys/types.h>
     #include <time.h> 	
     #include<pthread.h> 
+    #define MAX 50
     #define SIZE 10000
     char* substr(const char *src, int m, int n)
         {
@@ -34,10 +35,10 @@
         }
         printf("%d%d\n\n", i ,(int) strlen(expression));
         first = substr(expression , 0 , i);
-        puts(first);
+        //puts(first);
         n1 = atoi(first);
         sec = substr(expression , i+1 ,(int) strlen(expression));
-        puts(sec);
+        //puts(sec);
         n2 = atoi(sec);
         switch (expression[i])
         {
@@ -63,12 +64,15 @@
                 printf("Client disconected\n");        
             }else if(readcnf < 0)
             {
-                printf("fail");
                 perror("rvec failed in server program");  
             }else{
                 gcvt(calculator(buffer), SIZE,reply);
                 write(socket , reply , strlen(reply));   
             }
+        sleep(10);
+        puts("thread finished");
+        pthread_exit(0);
+        close(socket);
         free(parlSocket);
         return 0;
     }
@@ -108,22 +112,25 @@
         int readcnf = 0;
         int numberOfClients = 0;
         char reply[SIZE];
+        int co = -1;
+        pthread_t threads[MAX];
         while(1)
         {
             conncnf = accept(mySocket , (struct sockaddr*) NULL , NULL);
-            pthread_t thread;
             parlSocket = malloc(1);
+            co++;
             *parlSocket = conncnf;
-            puts("client conneted to socket");
+            puts("New client conneted to socket");
             numberOfClients++;
             printf("number of clients :%d\n" , numberOfClients);
-            if(pthread_create(&thread , NULL ,connectionHandler , (void*) parlSocket) < 0)
+            if(pthread_create(&threads[co] , NULL ,connectionHandler , (void*) parlSocket) < 0)
             {
                 perror("Thread creation failed in server program");
                 return 1;
-            }
-            pthread_join(thread, NULL);
-            
-            close(conncnf);
+            }   
+        }
+        for(int i =0 ;i < MAX; i++)
+        {   
+            pthread_join(threads[i], NULL);
         }
     }
