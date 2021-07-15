@@ -1,4 +1,4 @@
-#include <sys/socket.h>
+,#include <sys/socket.h>
 #include <sys/types.h>
 #include <netinet/in.h>
 #include <netdb.h>
@@ -7,6 +7,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <errno.h>
+#include <time.h>
 #include <arpa/inet.h> 
 #define SIZE 10000
 int isValid(char *expression)
@@ -42,6 +43,8 @@ int isValid(char *expression)
 }
 int main(int argc, char *argv[])
 {
+    clock_t first , last;
+
     int mysocket = 0;
     struct sockaddr_in client;
     if(argc != 6)
@@ -76,12 +79,15 @@ int main(int argc, char *argv[])
     } 
     int readcnf= 0 , sendcnf = 0;
     sendcnf = send(mysocket ,buffer, strlen(buffer) , 0 );
+    first = clock(); 
     if(sendcnf < 0)
     {
         perror("send failed in client program"); 
     }
     char server_reply[SIZE];
     readcnf = recv(mysocket , server_reply , SIZE , 0);
+    last = clock();
+    double responsTime = (double)(last - first) / CLOCKS_PER_SEC;
     if(readcnf ==0)
         {
             printf("Client disconected");
@@ -91,7 +97,9 @@ int main(int argc, char *argv[])
             perror("rvec failed in client program");  
             return 0;
         }else{
-            printf("\n%s\n" , server_reply);
+            
+            printf("\nanswer : %s\n" , server_reply);
         }
+    printf("respons time : %lf\n" ,1000*responsTime);
     return 0;
 }

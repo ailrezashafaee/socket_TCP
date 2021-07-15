@@ -26,7 +26,7 @@ int getId()
         {
             return i;
         }
-    }
+    }   
     return -1;
 }
 char* substr(const char *src, int m, int n)
@@ -85,12 +85,11 @@ void *connectionHandler(void *parlSocket)
             printf("Client disconected\n");        
         }else if(readcnf < 0)
         {
-            perror("rvec failed in server program");  
+            perror("rvec failed in server program");    
         }else{
             gcvt(calculator(buffer), SIZE,reply);
             write(socket , reply , strlen(reply));   
         }
-    sleep(5);
     printf("Thread %d finished\n" ,  temp);
     flags[temp] = 0;
     pthread_exit(0);
@@ -151,7 +150,6 @@ int main(int argc, char *argv[])
         *parlSocket = conncnf;
         args.socket = parlSocket;
         args.id = co;
-        printf("%d co : %d\n" , args.id , co);
         puts("New client conneted to socket");
         numberOfClients++;
         printf("number of clients :%d\n" , numberOfClients);
