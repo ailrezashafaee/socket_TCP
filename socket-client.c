@@ -91,7 +91,7 @@ int main(int argc, char *argv[])
             perror("rvec failed in client program");  
             return 0;
         }else{
-            printf("%s" , server_reply);
+            printf("\n%s\n" , server_reply);
         }
     return 0;
 }

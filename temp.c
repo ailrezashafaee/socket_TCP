@@ -8,24 +8,53 @@
 #include <string.h>
 #include <sys/types.h>
 #include <time.h> 	
-#include<pthread.h> 
+#include <semaphore.h>
+#include<pthread.h>
+struct args_struct{
+    int *socket;
+    int id;
+};
+sem_t mutex;
+#define MAX 10
 #define SIZE 10000
+int flags[MAX];
+int getId()
+{
+    for(int i=0 ;i  < MAX ; i++)
+    {
+        if(flags[i] == 0)
+        {
+            return i;
+        }
+    }
+    return -1;
+}
+char* substr(const char *src, int m, int n)
+    {
+    int len = n - m;
+
+    char *dest = (char*)malloc(sizeof(char) * (len + 1));
+    for (int i = m; i < n && (*(src + i) != '\0'); i++)
+    {
+        *dest = *(src + i);
+        dest++;
+    }
+    *dest = '\0';
+    return dest - len;
+}
 float calculator(char *expression)
 {
-    char first[SIZE] , sec[SIZE];
+    char *first="" , *sec = "";
     float n1 , n2;
     int i =0;
     while((expression[i] != '+') && (expression[i] != '-') && (expression[i] != '/') && (expression[i] != '*'))
     {
         i++;
     }
-    memcpy(first , &expression[0], i);
-    first[i] = '\0';
-    puts(first);
+    first = substr(expression , 0 , i);
+    
     n1 = atoi(first);
-    memcpy(sec , &expression[i+1] , strlen(expression));
-    sec[strlen(expression) - i] = '\0';
-    puts(sec);
+    sec = substr(expression , i+1 ,(int) strlen(expression));
     n2 = atoi(sec);
     switch (expression[i])
     {
@@ -41,29 +70,39 @@ float calculator(char *expression)
 }
 void *connectionHandler(void *parlSocket)
 {
+    struct args_struct *args = parlSocket;
+    sem_wait(&mutex);
+    int temp = args->id;
+    int socket = *(int*)(args->socket);
+    sem_post(&mutex);
     puts("thread is running");
-    char buffer[SIZE], reply[SIZE];
+    char buffer[SIZE] = "", reply[SIZE];
     int readcnf = 0;
-    int socket = *(int*)parlSocket;
+    
     readcnf = recv(socket , buffer , sizeof(buffer) , 0);
         if(readcnf ==0)
         {
             printf("Client disconected\n");        
         }else if(readcnf < 0)
         {
-            printf("fail");
             perror("rvec failed in server program");  
         }else{
             gcvt(calculator(buffer), SIZE,reply);
             write(socket , reply , strlen(reply));   
         }
+    sleep(5);
+    printf("Thread %d finished\n" ,  temp);
+    flags[temp] = 0;
+    pthread_exit(0);
+    close(socket);
     free(parlSocket);
+    
     return 0;
 }
 int main(int argc, char *argv[])
 {
     int mySocket , *parlSocket;
-    
+    sem_init(&mutex, 0, 1);   
     mySocket = socket(AF_INET , SOCK_STREAM , 0);
     struct sockaddr_in server;
     if(argc != 5)
@@ -95,23 +134,35 @@ int main(int argc, char *argv[])
     int conncnf = 0;
     int readcnf = 0;
     int numberOfClients = 0;
-    char reply[SIZE], buffer[SIZE];
+    char reply[SIZE];
+    int co;
+    pthread_t threads[MAX]; 
     while(1)
     {
+        co = -1;
+        struct args_struct args;    
         conncnf = accept(mySocket , (struct sockaddr*) NULL , NULL);
-        readcnf = recv(conncnf , buffer , sizeof(buffer) , 0);
-        if(readcnf ==0)
+        parlSocket = malloc(1);
+        while ((co ==-1))
         {
-            printf("Client disconected\n");        
-        }else if(readcnf < 0)
-        {
-            printf("fail");
-            perror("rvec failed in server program");  
-        }else{
-            gcvt(calculator(buffer), SIZE,reply);
-            write(conncnf , reply , strlen(reply));   
+            co = getId();
         }
-        
-        close(conncnf);
+        flags[co] = 1;
+        *parlSocket = conncnf;
+        args.socket = parlSocket;
+        args.id = co;
+        printf("%d co : %d\n" , args.id , co);
+        puts("New client conneted to socket");
+        numberOfClients++;
+        printf("number of clients :%d\n" , numberOfClients);
+        if(pthread_create(&threads[co]  , NULL ,connectionHandler , (void*) &args) < 0)
+        {
+            perror("Thread creation failed in server program");
+            return 1;
+        }   
+    }
+    for(int i =0 ;i < MAX; i++)
+    {   
+        pthread_join(threads[i], NULL);
     }
 }
