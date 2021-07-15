@@ -15,7 +15,6 @@ float calculator(char *expression)
     char first[SIZE] , sec[SIZE];
     float n1 , n2;
     int i =0;
-    printf("%d\n\n",i);
     while((expression[i] != '+') && (expression[i] != '-') && (expression[i] != '/') && (expression[i] != '*'))
     {
         i++;
@@ -28,7 +27,6 @@ float calculator(char *expression)
     sec[strlen(expression) - i] = '\0';
     puts(sec);
     n2 = atoi(sec);
-    free()
     switch (expression[i])
     {
     case '+':
@@ -97,22 +95,22 @@ int main(int argc, char *argv[])
     int conncnf = 0;
     int readcnf = 0;
     int numberOfClients = 0;
-    char reply[SIZE];
+    char reply[SIZE], buffer[SIZE];
     while(1)
     {
         conncnf = accept(mySocket , (struct sockaddr*) NULL , NULL);
-        pthread_t thread;
-        parlSocket = malloc(1);
-        *parlSocket = conncnf;
-        puts("client conneted to socket");
-        numberOfClients++;
-        printf("number of clients :%d\n" , numberOfClients);
-        if(pthread_create(&thread , NULL ,connectionHandler , (void*) parlSocket) < 0)
+        readcnf = recv(conncnf , buffer , sizeof(buffer) , 0);
+        if(readcnf ==0)
         {
-            perror("Thread creation failed in server program");
-            return 1;
+            printf("Client disconected\n");        
+        }else if(readcnf < 0)
+        {
+            printf("fail");
+            perror("rvec failed in server program");  
+        }else{
+            gcvt(calculator(buffer), SIZE,reply);
+            write(conncnf , reply , strlen(reply));   
         }
-        pthread_join(thread, NULL);
         
         close(conncnf);
     }
