@@ -42,8 +42,9 @@ int main(int argc, char *argv[])
     return 1;
     } 
     int readcnf= 0 , sendcnf = 0;
-    sendcnf = send(mysocket ,buffer, strlen(buffer) , 0 );
     first = clock(); 
+    sendcnf = send(mysocket ,buffer, strlen(buffer) , 0 );
+    
     if(sendcnf < 0)
     {
         perror("send failed in client program"); 
