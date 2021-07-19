@@ -1,4 +1,4 @@
-,#include <sys/socket.h>
+#include <sys/socket.h>
 #include <sys/types.h>
 #include <netinet/in.h>
 #include <netdb.h>
@@ -10,37 +10,6 @@
 #include <time.h>
 #include <arpa/inet.h> 
 #define SIZE 10000
-int isValid(char *expression)
-{
-    int flag = 0;
-    int k;
-    for(int i=0 ; i < strlen(expression) ;i++)
-    {
-        if( (expression[i] == '+') || (expression[i] == '-') || (expression[i] == '*') || (expression[i] == '/') )
-        {
-            flag =1;
-            k = i;
-            break;
-        }
-    }
-    for(int i =0  ; i < strlen(expression) ; i++)
-    {
-        
-        if(expression[i] == ' ')
-        {
-            break;
-        }
-        if(k!=i)
-        {       
-            if( expression[i] > '9' || expression[i] < '0')
-            {
-                break;
-            }
-        }
-    }
-    
-    return flag;
-}
 int main(int argc, char *argv[])
 {
     clock_t first , last;
@@ -54,11 +23,6 @@ int main(int argc, char *argv[])
     } 
     
     char *buffer= argv[5];
-    if(!isValid(buffer))
-    {
-        printf("please enter the expression properly  : <number1>(+,-,*,/)<number2>");
-        return 1;
-    }
     if((mysocket = socket(AF_INET, SOCK_STREAM, 0)) < 0)
     {       
         puts("There is a problem in socket creation"); 
@@ -100,6 +64,6 @@ int main(int argc, char *argv[])
             
             printf("\nanswer : %s\n" , server_reply);
         }
-    printf("respons time : %lf\n" ,1000*responsTime);
+    printf("respons time : %lfms\n" ,1000*responsTime);
     return 0;
 }

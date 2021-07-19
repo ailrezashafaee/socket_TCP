@@ -29,45 +29,6 @@ int getId()
     }   
     return -1;
 }
-char* substr(const char *src, int m, int n)
-    {
-    int len = n - m;
-
-    char *dest = (char*)malloc(sizeof(char) * (len + 1));
-    for (int i = m; i < n && (*(src + i) != '\0'); i++)
-    {
-        *dest = *(src + i);
-        dest++;
-    }
-    *dest = '\0';
-    return dest - len;
-}
-float calculator(char *expression)
-{
-    char *first="" , *sec = "";
-    float n1 , n2;
-    int i =0;
-    while((expression[i] != '+') && (expression[i] != '-') && (expression[i] != '/') && (expression[i] != '*'))
-    {
-        i++;
-    }
-    first = substr(expression , 0 , i);
-    
-    n1 = atoi(first);
-    sec = substr(expression , i+1 ,(int) strlen(expression));
-    n2 = atoi(sec);
-    switch (expression[i])
-    {
-    case '+':
-        return n1 + n2;
-    case '-':
-        return n1 - n2;
-    case '*' :
-        return n1 * n2;
-    case '/':   
-        return n1/n2;
-    }
-}
 void *connectionHandler(void *parlSocket)
 {
     struct args_struct *args = parlSocket;
@@ -75,10 +36,10 @@ void *connectionHandler(void *parlSocket)
     int temp = args->id;
     int socket = *(int*)(args->socket);
     sem_post(&mutex);
-    puts("thread is running");
-    char buffer[SIZE] = "", reply[SIZE];
+    printf("thread %d is started\n",temp);
+    char buffer[SIZE] = "";
     int readcnf = 0;
-    
+    char reply[100];
     readcnf = recv(socket , buffer , sizeof(buffer) , 0);
         if(readcnf ==0)
         {
@@ -87,15 +48,14 @@ void *connectionHandler(void *parlSocket)
         {
             perror("rvec failed in server program");    
         }else{
-            gcvt(calculator(buffer), SIZE,reply);
-            write(socket , reply , strlen(reply));   
+            sprintf(&reply , "The lenght of message is : %ld\n" , strlen(buffer));
+            write(socket , reply, strlen(reply));   
         }
     printf("Thread %d finished\n" ,  temp);
     flags[temp] = 0;
     pthread_exit(0);
     close(socket);
     free(parlSocket);
-    
     return 0;
 }
 int main(int argc, char *argv[])
@@ -111,7 +71,7 @@ int main(int argc, char *argv[])
     }
     if (mySocket == -1)
     {
-        printf("There is a problem in socket creation"); 
+        printf("Socket didn't created , server program"); 
         return 1;
     }
     server.sin_family = AF_INET;
@@ -163,4 +123,5 @@ int main(int argc, char *argv[])
     {   
         pthread_join(threads[i], NULL);
     }
+    close(mySocket);
 }
